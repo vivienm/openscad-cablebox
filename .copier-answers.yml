@@ -1,0 +1,16 @@
+# Changes here will be overwritten by Copier. NEVER EDIT MANUALLY.
+
+_commit: 4e39257
+_src_path: git@github.com:vivienm/copier-openscad
+author_fullname: Vivien Maisonneuve
+copyright_holder: Vivien Maisonneuve
+copyright_license: MIT
+copyright_year: 2023
+project_description: Cable management box to store power supplies and tidy up cables.
+project_name: Cable Box
+repository_hosted: true
+repository_name: openscad-cablebox
+repository_namespace: vivienm
+repository_provider: github.com
+repository_url: https://github.com/vivienm/openscad-cablebox
+script_name: cablebox
