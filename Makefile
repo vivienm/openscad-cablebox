@@ -1,25 +1,56 @@
+MODELS := cablebox
+
+OPENSCAD := openscad
+OPENSCAD_FLAGS := \
+	-q \
+	--hardwarnings \
+	--check-parameters=true \
+	--check-parameter-ranges=true
+
 SRC_DIR := src
 DIST_DIR := dist
 DEPENDS_DIR := .depends
-MODEL := cablebox
 
-SRC_FILE := $(patsubst %,$(SRC_DIR)/%.scad,$(MODEL))
-PARAM_FILE := $(patsubst %,$(SRC_DIR)/%.json,$(MODEL))
-PARAM_SETS := $(shell jq -r '.parameterSets | keys[]' $(PARAM_FILE))
-DIST_FILES := $(patsubst %,$(DIST_DIR)/$(MODEL)@%.3mf,$(PARAM_SETS))
-DEPENDS_FILES := $(patsubst %,$(DEPENDS_DIR)/$(MODEL)@%.mk,$(PARAM_SETS))
+include $(wildcard $(DEPENDS_DIR)/*.mk)
 
+.PHONY: all
+all: build
+
+.DEFAULT_GOAL:=build
 .PHONY: build
-build: $(DIST_FILES)
 
--include $(DEPENDS_FILES)
+define build_model =
+ifeq ("$(wildcard $(SRC_DIR)/$(1).json)","")
+$$(eval $$(call build_plain_model,$(1)))
+else
+$$(eval $$(call build_parametric_model,$(1)))
+endif
+endef
+
+define build_plain_model
+$$(DIST_DIR)/$(1).3mf: $$(SRC_DIR)/$(1).scad | $$(DIST_DIR) $$(DEPENDS_DIR)
+	$$(OPENSCAD) $$(OPENSCAD_FLAGS) -o $$@ -d $$(DEPENDS_DIR)/$(1).mk $$<
+
+build: $(DIST_DIR)/$(1).3mf
+endef
+
+define build_parametric_model
+$(foreach param_set,$(shell jq -r '.parameterSets | keys[]' $(SRC_DIR)/$(1).json),
+	$(eval $(call build_model_with_params,$(1),$(param_set))))
+endef
+
+define build_model_with_params
+$$(DIST_DIR)/$(1)@$(2).3mf: $$(SRC_DIR)/$(1).scad $$(SRC_DIR)/$(1).json | $$(DIST_DIR) $$(DEPENDS_DIR)
+	$$(OPENSCAD) $$(OPENSCAD_FLAGS) -o $$@ -d $$(DEPENDS_DIR)/$(1)@$(2).mk -p $$(SRC_DIR)/$(1).json -P $(2) $$<
+
+build: $(DIST_DIR)/$(1)@$(2).3mf
+endef
+
+$(foreach model,$(MODELS),$(eval $(call build_model,$(model))))
 
 $(DIST_DIR) $(DEPENDS_DIR):
-	mkdir -p $@
-
-$(DIST_FILES): $(DIST_DIR)/$(MODEL)@%.3mf: $(SRC_DIR)/$(MODEL).scad $(DIST_DIR) $(DEPENDS_DIR)
-	openscad -o $@ -d $(DEPENDS_DIR)/$*.mk -m make -p $(PARAM_FILE) -P $* -q --hardwarnings $<
+	mkdir $@
 
 .PHONY: clean
 clean:
-	rm -rf $(DIST_DIR) $(DEPENDS_DIR)
+	rm -fr $(DIST_DIR) $(DEPENDS_DIR)
