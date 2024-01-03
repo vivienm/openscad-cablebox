@@ -1,6 +1,6 @@
 # Changes here will be overwritten by Copier. NEVER EDIT MANUALLY.
 
-_commit: ca2c61b
+_commit: f324493
 _src_path: git@github.com:vivienm/copier-openscad
 author_fullname: Vivien Maisonneuve
 copyright_holder: Vivien Maisonneuve
@@ -13,4 +13,3 @@ repository_name: openscad-cablebox
 repository_namespace: vivienm
 repository_provider: github.com
 repository_url: https://github.com/vivienm/openscad-cablebox
-script_name: cablebox
